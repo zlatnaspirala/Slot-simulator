@@ -11,10 +11,12 @@ export default function Home(){
  const router=useRouter();
  const [c,setC]=useState<SlotConfig>(()=>clone(defaultSlot));
  const [m,setM]=useState<any>(null),[s,setS]=useState<any>(null),[spins,setSpins]=useState(100000);
- const [busy,setBusy]=useState(false),[user,setUser]=useState<any>(null),[authChecking,setAuthChecking]=useState(true),[simOpen,setSimOpen]=useState(true);
+ const [busy,setBusy]=useState(false),[user,setUser]=useState<any>(null),[authChecking,setAuthChecking]=useState(true),[simOpen,setSimOpen]=useState(true),[saveState,setSaveState]=useState<"loading"|"saved"|"saving"|"error">("loading");
  const [theme,setTheme]=useState<"dark"|"red">("dark");
 
- useEffect(()=>{fetch("/api/auth/me").then(async r=>{if(!r.ok){router.replace("/login");return}setUser((await r.json()).user);setAuthChecking(false)}).catch(()=>router.replace("/login"))},[router]);
+ useEffect(()=>{let alive=true;fetch("/api/auth/me").then(async r=>{if(!r.ok){router.replace("/login");return}setUser((await r.json()).user);const cr=await fetch("/api/config");if(!cr.ok){if(alive)setSaveState("error");return}const data=await cr.json();if(alive){if(data.config)setC(clone(data.config));setSaveState(data.config?"saved":"loading");setAuthChecking(false)}}).catch(()=>router.replace("/login"));return()=>{alive=false}},[router]);
+
+useEffect(()=>{if(authChecking||saveState==="loading")return;setSaveState("saving");const timer=setTimeout(async()=>{try{const r=await fetch("/api/config",{method:"PUT",headers:{"content-type":"application/json"},body:JSON.stringify(c)});if(r.status===401){router.replace("/login");return}setSaveState(r.ok?"saved":"error")}catch{setSaveState("error")}},500);return()=>clearTimeout(timer)},[c,authChecking,router]);
  const payCounts=useMemo(()=>{const set=new Set<string>();Object.values(c.paytable).forEach(p=>Object.keys(p).forEach(n=>set.add(n)));return[...set].sort((a,b)=>Number(a)-Number(b))},[c.paytable]);
  if(authChecking)return <main><p className="muted">Checking session...</p></main>;
  function patch(p:Partial<SlotConfig>){setC(v=>({...v,...p}));setM(null);setS(null)}
@@ -32,7 +34,7 @@ export default function Home(){
  async function sim(){setBusy(true);try{const r=await fetch("/api/simulate",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({config:c,spins})});if(r.status===401)return router.replace("/login");setS(await r.json())}finally{setBusy(false)}}
  async function logout(){await fetch("/api/auth/logout",{method:"POST"});router.replace("/login")}
  return <div className={`appShell theme-${theme} ${simOpen?"sim-open":""}`}>
-  <header className="topbar"><div className="brand"><b>Slot Simulator</b><span>Admin · {user?.email}</span></div><div className="topActions"><div className="themeSwitch"><button className={theme==="dark"?"active":""} onClick={()=>setTheme("dark")}>Dark</button><button className={theme==="red"?"active":""} onClick={()=>setTheme("red")}>Red</button></div><button onClick={logout}>Logout</button></div></header>
+  <header className="topbar"><div className="brand"><b>Slot Simulator</b><span>Admin · {user?.email} · {saveState==="saving"?"Saving...":saveState==="saved"?"Saved":"Save error"}</span></div><div className="topActions"><div className="themeSwitch"><button className={theme==="dark"?"active":""} onClick={()=>setTheme("dark")}>Dark</button><button className={theme==="red"?"active":""} onClick={()=>setTheme("red")}>Red</button></div><button onClick={logout}>Logout</button></div></header>
   <main className="workspace">
    <div className="editor">
     <section className="panel compact"><div className="sectionTitle"><h1>Machine Configuration</h1><button onClick={calc} disabled={busy}>Calculate RTP</button></div><div className="fields"><label>Machine name<input value={c.name} onChange={e=>patch({name:e.target.value})}/></label><label>Target RTP %<input type="number" step=".01" value={c.targetRtp*100} onChange={e=>patch({targetRtp:Number(e.target.value)/100})}/></label><label>Bet per spin<input type="number" step=".01" value={c.betPerSpin} onChange={e=>patch({betPerSpin:Number(e.target.value)})}/></label></div></section>
