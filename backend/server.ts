@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { MongoClient, ObjectId } from "mongodb";
 import { defaultSlot } from "../lib/slot/default";
 import type { SlotConfig } from "../lib/slot/types";
+import { calculateMath } from "../lib/slot/math";
 
 const PORT=Number(process.env.SLOT_SERVER_PORT||4000);
 const uri=process.env.MONGODB_URI;if(!uri)throw new Error("MONGODB_URI is required");
@@ -16,9 +17,8 @@ function filter(id:string,userId:string){return ObjectId.isValid(id)?{_id:new Ob
 function emit(id:string,data:unknown){const set=listeners.get(id);if(!set)return;const packet=`event: spin\ndata: ${JSON.stringify(data)}\n\n`;for(const res of set)try{res.write(packet)}catch{set.delete(res)}}
 function spin(c:SlotConfig){const grid=c.reels.map(r=>{const i=Math.floor(Math.random()*r.strip.length);return[0,1,2].map(n=>r.strip[(i+n)%r.strip.length])});let win=0,scatter=0;for(const reel of grid)for(const symbol of reel)if(symbol===c.freeSpins.triggerSymbol)scatter++;for(const line of c.paylines){const seq=line.rows.map((row,i)=>grid[i][row]);const wild=c.symbols.find(s=>s.type==="wild")?.id;let target=seq[0];if(wild&&target===wild)target=seq.find(s=>s!==wild)??wild;let count=0;for(const symbol of seq){if(symbol===target||symbol===wild)count++;else break}if(count>=3)win+=c.paytable[target]?.[String(count)]??0}return{grid,win,scatter}}
 const server=http.createServer(async(req,res)=>{try{const u=new URL(req.url||"/","http://localhost");const path=u.pathname;if(req.method==="OPTIONS"){res.writeHead(204,{"access-control-allow-origin":"*","access-control-allow-methods":"GET,POST,PUT,OPTIONS","access-control-allow-headers":"content-type"});return res.end()}const s=await session(req);if(!s)return send(res,401,{error:"Unauthorized"});
-if(req.method==="GET"&&path==="/slot-api/machines"){const ms=await db.collection("slot_machines").find({userId:s.userId}).sort({updatedAt:-1}).toArray();return send(res,200,{machines:ms.map(x=>({id:String(x._id),name:x.name,active:listeners.has(String(x._id))}))})}
-if(req.method==="POST"&&path==="/slot-api/math"){const b=await json(req);const c=b as SlotConfig;let total=0;for(const r of c.reels){const counts=new Map<string,number>();for(const x of r.strip)counts.set(x,(counts.get(x)||0)+1);for(const [sym,n] of counts){const p=c.paytable[sym]||{};for(const count of Object.keys(p))if(Number(count)<=c.reels.length)total+=Math.pow(n/r.strip.length,Number(count))*Number(p[count]);}}return send(res,200,{theoreticalRtp:total/baseBet(c),baseRtp:total/baseBet(c),featureRtp:0})}
-function baseBet(c:SlotConfig){return c.betPerSpin||1}
+if(req.method==="GET"&&path==="/slot-api/machines"){const ms=await db.collection("slot_machines").find({userId:s.userId}).sort({updatedAt:-1}).toArray();return send(res,200,{machines:ms.map(x=>({id:String(x._id),name:x.name,active:listeners.has(String(x._id))})),activeId:ms[0]?String(ms[0]._id):"",config:ms[0]?.config})}
+if(req.method==="POST"&&path==="/slot-api/math"){const c=await json(req) as SlotConfig;return send(res,200,calculateMath(c))}
 let match=path.match(/^\/slot-api\/machines\/([^/]+)(?:\/(activate|events|spin|simulate))?$/);
 if(match){const id=decodeURIComponent(match[1]);const action=match[2];const m=await db.collection("slot_machines").findOne(filter(id,s.userId));if(!m)return send(res,404,{error:"Machine not found"});
  if(req.method==="GET"&&!action)return send(res,200,{id:String(m._id),name:m.name,config:m.config,active:listeners.has(id)});
