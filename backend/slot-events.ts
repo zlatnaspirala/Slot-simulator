@@ -1,0 +1,3 @@
+export type SlotSpinEvent={id:string;machineId:string;timestamp:number;grid:string[][];win:number;scatter:number};
+export function subscribeSlotEvents(machineId:string,onSpin:(event:SlotSpinEvent)=>void,baseUrl=""){const source=new EventSource(`${baseUrl}/slot-api/machines/${encodeURIComponent(machineId)}/events`);source.addEventListener("spin",e=>onSpin(JSON.parse((e as MessageEvent).data)));return()=>source.close();}
+export async function activateSlot(machineId:string,baseUrl=""){const r=await fetch(`${baseUrl}/slot-api/machines/${encodeURIComponent(machineId)}/activate`,{method:"POST"});if(!r.ok)throw new Error("Unable to activate slot server");return r.json();}
