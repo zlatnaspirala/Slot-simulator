@@ -23,10 +23,20 @@ export async function GET() {
     if(!session) return NextResponse.json({error:"Unauthorized"},{status:401});
     const database=await db();
     const owner=ownerId(session.userId);
+    const requestedId=new URL(req.url).searchParams.get("machine");
+    const query=requestedId&&ObjectId.isValid(requestedId)?{_id:new ObjectId(requestedId),userId:owner}:{userId:owner};
+    if(requestedId){
+      const machine=await database.collection("slot_machines").findOne(query);
+      if(!machine)return NextResponse.json({error:"Machine not found"},{status:404});
+      return NextResponse.json({machines:[],activeId:String(machine._id),config:machine.config});
+    }
     const machines=await database.collection("slot_machines").find({userId:owner}).sort({updatedAt:-1}).toArray();
     if(!machines.length){
+      const legacy=await database.collection("slot_configs").findOne({userId:owner});
+      const config=(legacy?.config&&Array.isArray(legacy.config.reels))?legacy.config:defaultSlot;
+      const name=config.name||"My Slot Machine";
       const now=new Date();
-      const result=await database.collection("slot_machines").insertOne({userId:owner,name:defaultSlot.name||"My Slot Machine",config:defaultSlot,createdAt:now,updatedAt:now});
+      const result=await database.collection("slot_machines").insertOne({userId:owner,name,config,createdAt:now,updatedAt:now});
       return NextResponse.json({machines:[{id:String(result.insertedId),name:defaultSlot.name||"My Slot Machine",updatedAt:now}],activeId:String(result.insertedId),config:defaultSlot});
     }
     const active=machines[0];
