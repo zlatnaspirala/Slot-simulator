@@ -17,7 +17,7 @@ function cleanConfig(input: unknown): SlotConfig {
   return c;
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     const session=await getSession();
     if(!session) return NextResponse.json({error:"Unauthorized"},{status:401});
