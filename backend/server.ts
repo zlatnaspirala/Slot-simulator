@@ -7,8 +7,9 @@ import { calculateMath } from "../lib/slot/math";
 
 const PORT=Number(process.env.SLOT_SERVER_PORT||4000);
 const uri=process.env.MONGODB_URI;if(!uri)throw new Error("MONGODB_URI is required");
-const mongo=new MongoClient(uri);await mongo.connect();const db=mongo.db(process.env.MONGODB_DB||"slot_simulator");
+const mongo=new MongoClient(uri);
 const listeners=new Map<string,Set<http.ServerResponse>>();
+let db: ReturnType<MongoClient["db"]>;
 
 async function session(req:http.IncomingMessage){const token=(req.headers.cookie||"").match(/(?:^|;\s*)slot_session=([^;]+)/)?.[1];if(!token)return null;return db.collection("sessions").findOne({token,expiresAt:{$gt:new Date()}})}
 async function json(req:http.IncomingMessage){let s="";for await(const x of req)s+=x;return s?JSON.parse(s):{}}
@@ -16,7 +17,7 @@ function send(res:http.ServerResponse,status:number,data:unknown){res.writeHead(
 function filter(id:string,userId:string){return ObjectId.isValid(id)?{_id:new ObjectId(id),userId}:{_id:id,userId}}
 function emit(id:string,data:unknown){const set=listeners.get(id);if(!set)return;const packet=`event: spin\ndata: ${JSON.stringify(data)}\n\n`;for(const res of set)try{res.write(packet)}catch{set.delete(res)}}
 function spin(c:SlotConfig){const grid=c.reels.map(r=>{const i=Math.floor(Math.random()*r.strip.length);return[0,1,2].map(n=>r.strip[(i+n)%r.strip.length])});let win=0,scatter=0;for(const reel of grid)for(const symbol of reel)if(symbol===c.freeSpins.triggerSymbol)scatter++;for(const line of c.paylines){const seq=line.rows.map((row,i)=>grid[i][row]);const wild=c.symbols.find(s=>s.type==="wild")?.id;let target=seq[0];if(wild&&target===wild)target=seq.find(s=>s!==wild)??wild;let count=0;for(const symbol of seq){if(symbol===target||symbol===wild)count++;else break}if(count>=3)win+=c.paytable[target]?.[String(count)]??0}return{grid,win,scatter}}
-const server=http.createServer(async(req,res)=>{try{const u=new URL(req.url||"/","http://localhost");const path=u.pathname;if(req.method==="OPTIONS"){res.writeHead(204,{"access-control-allow-origin":"*","access-control-allow-methods":"GET,POST,PUT,OPTIONS","access-control-allow-headers":"content-type"});return res.end()}const s=await session(req);if(!s)return send(res,401,{error:"Unauthorized"});
+async function start(){ await mongo.connect(); db=mongo.db(process.env.MONGODB_DB||"slot_simulator"); const server=http.createServer(async(req,res)=>{try{const u=new URL(req.url||"/","http://localhost");const path=u.pathname;if(req.method==="OPTIONS"){res.writeHead(204,{"access-control-allow-origin":"*","access-control-allow-methods":"GET,POST,PUT,OPTIONS","access-control-allow-headers":"content-type"});return res.end()}const s=await session(req);if(!s)return send(res,401,{error:"Unauthorized"});
 if(req.method==="GET"&&path==="/slot-api/machines"){const ms=await db.collection("slot_machines").find({userId:s.userId}).sort({updatedAt:-1}).toArray();return send(res,200,{machines:ms.map(x=>({id:String(x._id),name:x.name,active:listeners.has(String(x._id))})),activeId:ms[0]?String(ms[0]._id):"",config:ms[0]?.config})}
 if(req.method==="POST"&&path==="/slot-api/math"){const c=await json(req) as SlotConfig;return send(res,200,calculateMath(c))}
 let match=path.match(/^\/slot-api\/machines\/([^/]+)(?:\/(activate|events|spin|simulate))?$/);
@@ -30,4 +31,5 @@ if(match){const id=decodeURIComponent(match[1]);const action=match[2];const m=aw
  if(req.method==="POST"&&action==="simulate"){const b=await json(req),c=m.config as SlotConfig,n=Math.min(10000000,Math.max(1000,Number(b.spins)||100000));let total=0,wins=0,max=0,triggers=0;for(let i=0;i<n;i++){const x=spin(c);total+=x.win;if(x.win>0){wins++;max=Math.max(max,x.win)}if(c.freeSpins.enabled&&x.scatter>=c.freeSpins.triggerCount)triggers++}const wager=n*c.betPerSpin;return send(res,200,{spins:n,wager,totalWin:total,rtp:wager?total/wager:0,winSpins:wins,hitFrequency:wins/n,averageWin:wins?total/wins:0,maxWin:max,freeSpinTriggers:triggers})}
 }
 return send(res,404,{error:"Not found"})}catch(e){console.error("slot-server:",e);send(res,500,{error:e instanceof Error?e.message:"Server error"})}});
-server.listen(PORT,()=>console.log(`Slot server listening on http://localhost:${PORT}`));
+server.listen(PORT,()=>console.log(`Slot server listening on http://localhost:${PORT}`)); }
+start().catch(error=>{console.error("Failed to start slot server:",error);process.exit(1)});
