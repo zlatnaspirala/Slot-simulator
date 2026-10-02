@@ -1,13 +1,14 @@
 # slot-simulator 1.0.0
 
+ Dinamic 'slot mashine' construction and simulate play/payouts.
+
 ## BackOffice
  - MongoDB
  - NodeJS
 
-## Clietn test
+## Client (reactjs/vanilla JS)
  - `app` folder is reactjs app
-   Must be "app" becouse it is hardcoded in next.
-
+   Must be "app" because it is hardcoded in next.
  - public/vanilla is JS native variant
 
 ```js
@@ -24,7 +25,7 @@ A parallel vanilla JavaScript preview lives at `public/vanilla/`.
 
 ## Performance note
 
-**Vanilla JS is the ultimate performance-oriented option when the UI does not need a framework.** It has less framework/runtime overhead and is useful for a lightweight slot preview, benchmark client, embedded demo, or very high-frequency visual updates.
+**Vanilla JS is the ultimate performance-oriented option.** It has less framework/runtime overhead and is useful for a lightweight slot preview, benchmark client, embedded demo, or very high-frequency visual updates.
 
 For the configurator itself, React is retained because the application is an admin/editor workflow with many dynamic controls, forms, tables, configuration panels, and stateful views.
 
