@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Slot Simulator — Vanilla JS</title>
+<style>
+body{margin:0;background:#080a0f;color:#eef2f7;font:14px system-ui,sans-serif}main{max-width:1100px;margin:auto;padding:24px}button{background:#171d27;color:#fff;border:1px solid #344052;border-radius:8px;padding:10px 14px;cursor:pointer}.toolbar{display:flex;gap:8px;flex-wrap:wrap}.panel{background:#11151d;border:1px solid #242c38;border-radius:12px;padding:18px;margin:14px 0}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.metric{background:#090c12;border:1px solid #252d39;border-radius:8px;padding:12px}.metric b{display:block;font-size:20px;margin-top:4px}@media(max-width:700px){.metrics{grid-template-columns:1fr 1fr}}</style>
+</head>
+<body><main>
+<h1>Slot Simulator — Vanilla JS</h1>
+<p>Performance-oriented client preview. The authoritative math and simulation remain server-side.</p>
+<div class="toolbar"><button id="math">Calculate RTP</button><button id="sim">Simulate 100,000</button></div>
+<div class="panel"><h2>5-Reel Preview</h2><div id="reels"></div></div>
+<div class="panel"><h2>Results</h2><div id="results" class="metrics"></div></div>
+<script src="./app.js"></script>
+</main></body>
+</html>
