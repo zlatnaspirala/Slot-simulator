@@ -1,3 +1,61 @@
 import {SlotConfig} from "./types";
-const strip=["A","K","Q","J","10","A","K","Q","J","10","W","A","K","Q","J","10","S","A","K","Q"];
-export const defaultSlot:SlotConfig={name:"Demo Fortune",targetRtp:.95,betPerSpin:1,symbols:[{id:"A",name:"A",type:"normal"},{id:"K",name:"K",type:"normal"},{id:"Q",name:"Q",type:"normal"},{id:"J",name:"J",type:"normal"},{id:"10",name:"10",type:"normal"},{id:"W",name:"WILD",type:"wild"},{id:"S",name:"SCATTER",type:"scatter"}],reels:[1,2,3,4,5].map(i=>({id:"R"+i,strip:[...strip]})),paylines:[{id:"L1",rows:[1,1,1,1,1]},{id:"L2",rows:[0,0,0,0,0]},{id:"L3",rows:[2,2,2,2,2]},{id:"L4",rows:[0,1,2,1,0]},{id:"L5",rows:[2,1,0,1,2]}],paytable:{A:{"3":5,"4":15,"5":50},K:{"3":4,"4":12,"5":40},Q:{"3":3,"4":10,"5":30},J:{"3":2,"4":8,"5":20},"10":{"3":1,"4":5,"5":15},W:{"3":10,"4":50,"5":250}},freeSpins:{enabled:true,triggerSymbol:"S",triggerCount:3,spinsAwarded:10,retrigger:true,multiplier:1}};
+const strip = [
+  "A",
+  "K",
+  "Q",
+  "J",
+  "10",
+  "A",
+  "K",
+  "Q",
+  "J",
+  "10",
+  "W",
+  "A",
+  "K",
+  "Q",
+  "J",
+  "10",
+  "S",
+  "A",
+  "K",
+  "Q",
+];
+export const defaultSlot: SlotConfig = {
+  name: "Demo Fortune",
+  targetRtp: 0.95,
+  betPerSpin: 1,
+  symbols: [
+    {id: "A", name: "A", type: "normal"},
+    {id: "K", name: "K", type: "normal"},
+    {id: "Q", name: "Q", type: "normal"},
+    {id: "J", name: "J", type: "normal"},
+    {id: "10", name: "10", type: "normal"},
+    {id: "W", name: "WILD", type: "wild"},
+    {id: "S", name: "SCATTER", type: "scatter"},
+  ],
+  reels: [1, 2, 3, 4, 5].map(i => ({id: "R" + i, strip: [...strip]})),
+  paylines: [
+    {id: "L1", rows: [1, 1, 1, 1, 1]},
+    {id: "L2", rows: [0, 0, 0, 0, 0]},
+    {id: "L3", rows: [2, 2, 2, 2, 2]},
+    {id: "L4", rows: [0, 1, 2, 1, 0]},
+    {id: "L5", rows: [2, 1, 0, 1, 2]},
+  ],
+  paytable: {
+    A: {"3": 5, "4": 15, "5": 50},
+    K: {"3": 4, "4": 12, "5": 40},
+    Q: {"3": 3, "4": 10, "5": 30},
+    J: {"3": 2, "4": 8, "5": 20},
+    "10": {"3": 1, "4": 5, "5": 15},
+    W: {"3": 10, "4": 50, "5": 250},
+  },
+  freeSpins: {
+    enabled: true,
+    triggerSymbol: "S",
+    triggerCount: 3,
+    spinsAwarded: 10,
+    retrigger: true,
+    multiplier: 1,
+  },
+};

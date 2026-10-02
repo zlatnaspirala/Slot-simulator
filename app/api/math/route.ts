@@ -1,2 +1,9 @@
-import {NextRequest,NextResponse} from "next/server";import {calculateMath} from "@/lib/slot/math";
-export async function POST(req:NextRequest){try{return NextResponse.json(calculateMath(await req.json()))}catch{return NextResponse.json({error:"Invalid configuration"},{status:400})}}
+import {NextRequest, NextResponse} from "next/server";
+import {calculateMath} from "@/lib/slot/math";
+export async function POST(req: NextRequest) {
+  try {
+    return NextResponse.json(calculateMath(await req.json()));
+  } catch {
+    return NextResponse.json({error: "Invalid configuration"}, {status: 400});
+  }
+}

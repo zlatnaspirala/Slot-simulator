@@ -1,1 +1,194 @@
-*{box-sizing:border-box}html,body{margin:0;background:#080a0f;color:#eef2f7;font-family:system-ui,sans-serif}body{min-height:100vh}button,input{font:inherit}button{cursor:pointer;border:1px solid #344052;background:#171d27;color:#fff;border-radius:8px;padding:10px 14px}button:first-child{background:#2d6cdf}main{max-width:1450px;margin:auto;padding:22px}header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}header b{font-size:24px}header span{margin-left:14px;color:#8994a4}.layout{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:18px}.main,aside{display:flex;flex-direction:column;gap:18px}.panel{background:#11151d;border:1px solid #242c38;border-radius:14px;padding:18px}.fields{display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px}label{display:block;color:#9da7b5;font-size:12px}input{display:block;width:100%;margin-top:6px;background:#090c12;color:#fff;border:1px solid #303847;border-radius:7px;padding:10px}.actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}.reels{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.reel{background:#0a0d13;border:1px solid #303847;border-radius:10px;padding:8px;text-align:center}.reel small{color:#7f8998}.cell{background:#191f2a;margin-top:8px;padding:15px 5px;border-radius:6px;font-weight:700}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:9px;border-bottom:1px solid #252d39}.metrics{display:grid;grid-template-columns:1fr 1fr;gap:9px}.metric{background:#0a0d13;border:1px solid #252d39;border-radius:9px;padding:11px}.metric small{color:#8994a4}.metric strong{display:block;font-size:20px;margin-top:4px}.muted{color:#8d98a8}@media(max-width:900px){.layout{grid-template-columns:1fr}.fields{grid-template-columns:1fr}}@media(max-width:600px){main{padding:12px}.reels{grid-template-columns:1fr 1fr 1fr}.panel{padding:13px}}
+* {
+  box-sizing: border-box
+}
+
+html,
+body {
+  margin: 0;
+  background: #080a0f;
+  color: #eef2f7;
+  font-family: system-ui, sans-serif
+}
+
+body {
+  min-height: 100vh
+}
+
+button,
+input {
+  font: inherit
+}
+
+button {
+  cursor: pointer;
+  border: 1px solid #344052;
+  background: #171d27;
+  color: #fff;
+  border-radius: 8px;
+  padding: 10px 14px
+}
+
+button:first-child {
+  background: #2d6cdf
+}
+
+main {
+  max-width: 1450px;
+  margin: auto;
+  padding: 22px
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px
+}
+
+header b {
+  font-size: 24px
+}
+
+header span {
+  margin-left: 14px;
+  color: #8994a4
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 18px
+}
+
+.main,
+aside {
+  display: flex;
+  flex-direction: column;
+  gap: 18px
+}
+
+.panel {
+  background: #11151d;
+  border: 1px solid #242c38;
+  border-radius: 14px;
+  padding: 18px
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 12px
+}
+
+label {
+  display: block;
+  color: #9da7b5;
+  font-size: 12px
+}
+
+input {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  background: #090c12;
+  color: #fff;
+  border: 1px solid #303847;
+  border-radius: 7px;
+  padding: 10px
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  flex-wrap: wrap
+}
+
+.reels {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px
+}
+
+.reel {
+  background: #0a0d13;
+  border: 1px solid #303847;
+  border-radius: 10px;
+  padding: 8px;
+  text-align: center
+}
+
+.reel small {
+  color: #7f8998
+}
+
+.cell {
+  background: #191f2a;
+  margin-top: 8px;
+  padding: 15px 5px;
+  border-radius: 6px;
+  font-weight: 700
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse
+}
+
+th,
+td {
+  text-align: left;
+  padding: 9px;
+  border-bottom: 1px solid #252d39
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px
+}
+
+.metric {
+  background: #0a0d13;
+  border: 1px solid #252d39;
+  border-radius: 9px;
+  padding: 11px
+}
+
+.metric small {
+  color: #8994a4
+}
+
+.metric strong {
+  display: block;
+  font-size: 20px;
+  margin-top: 4px
+}
+
+.muted {
+  color: #8d98a8
+}
+
+@media(max-width:900px) {
+  .layout {
+    grid-template-columns: 1fr
+  }
+
+  .fields {
+    grid-template-columns: 1fr
+  }
+}
+
+@media(max-width:600px) {
+  main {
+    padding: 12px
+  }
+
+  .reels {
+    grid-template-columns: 1fr 1fr 1fr
+  }
+
+  .panel {
+    padding: 13px
+  }
+}
