@@ -24,6 +24,8 @@ async function start(){ await mongo.connect(); db=mongo.db(process.env.MONGODB_D
   if(req.method==="OPTIONS"){res.writeHead(204);return res.end();}try{const u=new URL(req.url||"/","http://localhost");const path=u.pathname;const s=await session(req);if(!s)return send(res,401,{error:"Unauthorized"});const ownerId=ObjectId.isValid(String(s.userId))?new ObjectId(String(s.userId)):String(s.userId);
 if(req.method==="GET"&&path==="/slot-api/machines"){const ms=await db.collection("slot_machines").find({userId:ownerId}).sort({updatedAt:-1}).toArray();return send(res,200,{machines:ms.map(x=>({id:String(x._id),name:x.name,active:listeners.has(String(x._id))})),activeId:ms[0]?String(ms[0]._id):"",config:ms[0]?.config})}
 if(req.method==="POST"&&path==="/slot-api/math"){const c=await json(req) as SlotConfig;return send(res,200,calculateMath(c))}
+if(req.method==="POST"&&path==="/slot-api/machines"){const b=await json(req);const config=structuredClone((b.config as SlotConfig)||defaultSlot);const name=String(b.name||config.name||"New Slot Machine").trim()||"New Slot Machine";config.name=name;const now=new Date();const result=await db.collection("slot_machines").insertOne({userId:ownerId,name,config,createdAt:now,updatedAt:now});return send(res,200,{ok:true,machine:{id:String(result.insertedId),name},config})}
+
 let match=path.match(/^\/slot-api\/machines\/([^/]+)(?:\/(activate|events|spin|simulate))?$/);
 if(match){const id=decodeURIComponent(match[1]);const action=match[2];const m=await db.collection("slot_machines").findOne(filter(id,ownerId));if(!m)return send(res,404,{error:"Machine not found"});
  if(req.method==="GET"&&!action)return send(res,200,{id:String(m._id),name:m.name,config:m.config,active:listeners.has(id)});
