@@ -101,8 +101,12 @@ export async function DELETE(req:NextRequest) {
     const id=new URL(req.url).searchParams.get("id");
     if(!id || !ObjectId.isValid(id)) return NextResponse.json({error:"Invalid machine id"},{status:400});
     const database=await db();
-    const result=await database.collection("slot_machines").deleteOne({_id:new ObjectId(id),userId:ownerId(session.userId)});
+    const owner=ownerId(session.userId);
+    const machines=database.collection("slot_machines");
+    const result=await machines.deleteOne({_id:new ObjectId(id),userId:owner});
     if(!result.deletedCount) return NextResponse.json({error:"Machine not found"},{status:404});
+    const remaining=await machines.countDocuments({userId:owner});
+    if(remaining===0){const config=structuredClone(defaultSlot);const now=new Date();await machines.insertOne({userId:owner,name:config.name||"My Slot Machine",config,createdAt:now,updatedAt:now});}
     return NextResponse.json({ok:true});
   } catch(error) {
     console.error("Deleting machine failed:",error);
