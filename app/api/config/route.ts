@@ -56,6 +56,8 @@ export async function POST(req:NextRequest) {
     const session=await getSession();
     if(!session) return NextResponse.json({error:"Unauthorized"},{status:401});
     const body=await req.json();
+    const user=await db().then(database=>database.collection("users").findOne<any>({_id:ownerId(session.userId)}));
+    if(user?.role!=="admin"){const count=await (await db()).collection("slot_machines").countDocuments({userId:ownerId(session.userId)});if(count>=1)return NextResponse.json({error:"User accounts can have only one slot machine"},{status:403});}
     const config=body.config?cleanConfig(body.config):structuredClone(defaultSlot);
     const name=String(body.name||config.name||"New Slot Machine").trim()||"New Slot Machine";
     config.name=name;
