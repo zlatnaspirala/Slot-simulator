@@ -1,6 +1,6 @@
 import http from "node:http";
 import fs from "node:fs";
-import path from "node:path";
+import pathModule from "node:path";
 import { randomUUID } from "node:crypto";
 import { MongoClient, ObjectId } from "mongodb";
 import { defaultSlot } from "../lib/slot/default";
@@ -37,7 +37,7 @@ async function start(){ await mongo.connect(); db=mongo.db(process.env.MONGODB_D
     }
     if(routePath==="/"||routePath==="/vanilla/"||routePath==="/vanilla/index.html"||routePath.startsWith("/vanilla/dist/")){
       const file=routePath==="/"||routePath==="/vanilla/"||routePath==="/vanilla/index.html"?"vanilla/index.html":routePath.slice(1);
-      const full=path.resolve(process.cwd(),file);if(!fs.existsSync(full))return send(res,404,{error:"Static file not found"});
+      const full=pathModule.resolve(process.cwd(),file);if(!fs.existsSync(full))return send(res,404,{error:"Static file not found"});
       const ext=path.extname(full);const types:any={".html":"text/html; charset=utf-8",".js":"text/javascript; charset=utf-8",".css":"text/css; charset=utf-8"};res.writeHead(200,{"content-type":types[ext]||"application/octet-stream","cache-control":"no-cache"});return res.end(fs.readFileSync(full));
     }
     const path=u.pathname;const s=await session(req);if(!s)return send(res,401,{error:"Unauthorized"});const ownerId=ObjectId.isValid(String(s.userId))?new ObjectId(String(s.userId)):String(s.userId);
