@@ -35,8 +35,8 @@ async function start(){ await mongo.connect(); db=mongo.db(process.env.MONGODB_D
       if(action==="events"&&req.method==="GET"){res.writeHead(200,{"content-type":"text/event-stream","cache-control":"no-cache","connection":"keep-alive","access-control-allow-origin":origin||"*"});res.write(": connected\\n\\n");if(!listeners.has(id))listeners.set(id,new Set());listeners.get(id)!.add(res);req.on("close",()=>listeners.get(id)?.delete(res));return}
       if(action==="spin"&&req.method==="POST"){const result={id:randomUUID(),machineId:id,timestamp:Date.now(),...spin(machine.config as SlotConfig)};emit(id,result);return send(res,200,result)}
     }
-    if(routePath==="/"||routePath==="/vanilla/"||routePath==="/vanilla/index.html"||routePath.startsWith("/vanilla/dist/")){
-      const file=routePath==="/"||routePath==="/vanilla/"||routePath==="/vanilla/index.html"?"vanilla/index.html":routePath.slice(1);
+    if(routePath==="/"||routePath==="/vanilla/"||routePath==="/vanilla/index.html"||routePath.startsWith("/vanilla/dist/")||routePath.startsWith("/dist/")){
+      const file=routePath==="/"||routePath==="/vanilla/"||routePath==="/vanilla/index.html"?"vanilla/index.html":routePath.startsWith("/dist/")?"vanilla"+routePath:routePath.slice(1);
       const full=pathModule.resolve(process.cwd(),file);if(!fs.existsSync(full))return send(res,404,{error:"Static file not found"});
       const ext=pathModule.extname(full);const types:any={".html":"text/html; charset=utf-8",".js":"text/javascript; charset=utf-8",".css":"text/css; charset=utf-8"};res.writeHead(200,{"content-type":types[ext]||"application/octet-stream","cache-control":"no-cache"});return res.end(fs.readFileSync(full));
     }
