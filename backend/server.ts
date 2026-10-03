@@ -1,4 +1,6 @@
 import http from "node:http";
+import fs from "node:fs";
+import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { MongoClient, ObjectId } from "mongodb";
 import { defaultSlot } from "../lib/slot/default";
@@ -21,7 +23,24 @@ async function start(){ await mongo.connect(); db=mongo.db(process.env.MONGODB_D
   const origin=req.headers.origin;
   const allowedOrigins=new Set(["http://localhost","http://localhost:3000","http://localhost:3001"]);
   if(origin&&allowedOrigins.has(origin)){res.setHeader("Access-Control-Allow-Origin",origin);res.setHeader("Vary","Origin");res.setHeader("Access-Control-Allow-Credentials","true");res.setHeader("Access-Control-Allow-Headers","Content-Type");res.setHeader("Access-Control-Allow-Methods","GET,POST,PUT,DELETE,OPTIONS");}
-  if(req.method==="OPTIONS"){res.writeHead(204);return res.end();}try{const u=new URL(req.url||"/","http://localhost");const path=u.pathname;const s=await session(req);if(!s)return send(res,401,{error:"Unauthorized"});const ownerId=ObjectId.isValid(String(s.userId))?new ObjectId(String(s.userId)):String(s.userId);
+  if(req.method==="OPTIONS"){res.writeHead(204);return res.end();}
+  try{
+    const u=new URL(req.url||"/","http://localhost");const routePath=u.pathname;
+    const publicMachineRoute=routePath.match(/^\/slot-api\/machines\/([^/]+)\/(slot-config|events|spin)$/);
+    if(publicMachineRoute){
+      const id=decodeURIComponent(publicMachineRoute[1]);const action=publicMachineRoute[2];
+      const machine=await db.collection("slot_machines").findOne({_id:ObjectId.isValid(id)?new ObjectId(id):id});
+      if(!machine)return send(res,404,{error:"Machine not found"});
+      if(action==="slot-config"&&req.method==="GET"){const config=machine.config||{};return send(res,200,{machineId:id,name:machine.name,reels:config.reels||[],symbols:config.symbols||[],paytable:config.paytable||{},paylines:config.paylines||[],freeSpins:config.freeSpins||{},targetRtp:config.targetRtp??0.95})}
+      if(action==="events"&&req.method==="GET"){res.writeHead(200,{"content-type":"text/event-stream","cache-control":"no-cache","connection":"keep-alive","access-control-allow-origin":origin||"*"});res.write(": connected\\n\\n");if(!listeners.has(id))listeners.set(id,new Set());listeners.get(id)!.add(res);req.on("close",()=>listeners.get(id)?.delete(res));return}
+      if(action==="spin"&&req.method==="POST"){const result={id:randomUUID(),machineId:id,timestamp:Date.now(),...spin(machine.config as SlotConfig)};emit(id,result);return send(res,200,result)}
+    }
+    if(routePath==="/"||routePath==="/vanilla/"||routePath==="/vanilla/index.html"||routePath.startsWith("/vanilla/dist/")){
+      const file=routePath==="/"||routePath==="/vanilla/"||routePath==="/vanilla/index.html"?"vanilla/index.html":routePath.slice(1);
+      const full=path.resolve(process.cwd(),file);if(!fs.existsSync(full))return send(res,404,{error:"Static file not found"});
+      const ext=path.extname(full);const types:any={".html":"text/html; charset=utf-8",".js":"text/javascript; charset=utf-8",".css":"text/css; charset=utf-8"};res.writeHead(200,{"content-type":types[ext]||"application/octet-stream","cache-control":"no-cache"});return res.end(fs.readFileSync(full));
+    }
+    const path=u.pathname;const s=await session(req);if(!s)return send(res,401,{error:"Unauthorized"});const ownerId=ObjectId.isValid(String(s.userId))?new ObjectId(String(s.userId)):String(s.userId);
 if(req.method==="GET"&&path==="/slot-api/machines"){const ms=await db.collection("slot_machines").find({userId:ownerId}).sort({updatedAt:-1}).toArray();return send(res,200,{machines:ms.map(x=>({id:String(x._id),name:x.name,active:listeners.has(String(x._id))})),activeId:ms[0]?String(ms[0]._id):"",config:ms[0]?.config})}
 if(req.method==="POST"&&path==="/slot-api/math"){const c=await json(req) as SlotConfig;return send(res,200,calculateMath(c))}
 if(req.method==="GET"&&path.startsWith("/slot-api/machines/")&&path.endsWith("/slot-config")){const id=path.split("/")[3];const machine=await db.collection("slot_machines").findOne({_id:new ObjectId(id)});if(!machine)return send(res,404,{error:"Machine not found"});const config=machine.config||{};return send(res,200,{machineId:id,name:machine.name,reels:config.reels||[],symbols:config.symbols||[],paytable:config.paytable||{},freeSpins:config.freeSpins||{},targetRtp:config.targetRtp??0.95})}
