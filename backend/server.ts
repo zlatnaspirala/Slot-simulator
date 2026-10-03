@@ -15,7 +15,7 @@ const mongo=new MongoClient(uri);
 const listeners=new Map<string,Set<http.ServerResponse>>();
 let db: ReturnType<MongoClient["db"]>;
 
-async function session(req:http.IncomingMessage){const token=(req.headers.cookie||"").match(/(?:^|;\s*)slot_session=([^;]+)/)?.[1];if(!token)return null;const session=await db.collection("sessions").findOne<{token:string;userId:string;expiresAt:Date}>({token,expiresAt:{$gt:new Date()}});if(!session)return null;return {...session,userId:session.userId}}
+async function session(req:http.IncomingMessage){const token=(req.headers.cookie||"").match(/(?:^|;\s*)slot_session=([^;]+)/)?.[1];if(!token)return null;const session=await db.collection("sessions").findOne<{token:string;userId:string;expiresAt:Date}>({token,expiresAt:{$gt:new Date()}});if(!session)return null;const uid=ObjectId.isValid(String(session.userId))?new ObjectId(String(session.userId)):String(session.userId);const user=await db.collection("users").findOne<any>({_id:uid});if(!user)return null;return {...session,userId:session.userId,role:user.role||"user"}}
 async function json(req:http.IncomingMessage){let s="";for await(const x of req)s+=x;return s?JSON.parse(s):{}}
 function send(res:http.ServerResponse,status:number,data:unknown){res.writeHead(status,{"content-type":"application/json","cache-control":"no-store"});res.end(JSON.stringify(data))}
 function filter(id:string,userId:ObjectId|string){return ObjectId.isValid(id)?{_id:new ObjectId(id),userId}:{_id:id,userId}}
