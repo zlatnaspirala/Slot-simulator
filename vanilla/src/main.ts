@@ -23,6 +23,7 @@ if(tab==="server"&&userRole==="admin")loadServerConfig().catch(console.error);}
 async function loadServerConfig(){if(!machineId)return;const el=document.querySelector("#serverConfigData");if(el)el.textContent=JSON.stringify(await api<any>("/slot-api/machines/"+machineId+"/slot-config"),null,2)}
 function renderLogin(){
 root.innerHTML=`<div class="landing theme-${theme}">
+  <div class="landingCenter">
   <main class="landingCard">
     <div class="logo">🎰</div>
     <h1>Slot Simulator</h1>
@@ -36,6 +37,7 @@ root.innerHTML=`<div class="landing theme-${theme}">
       <span>🎰 Dynamic reels</span><span>📊 RTP simulation</span><span>⚙️ Full configuration</span>
     </div>
   </main>
+  </div>
 </div>`
 }
 async function init(){
