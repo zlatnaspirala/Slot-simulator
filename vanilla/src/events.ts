@@ -1,0 +1,1 @@
+import{API}from"./api";export function subscribe(machineId:string,onSpin:(e:any)=>void){const es=new EventSource(`${API}/slot-api/machines/${encodeURIComponent(machineId)}/events`,{withCredentials:true});es.addEventListener("spin",e=>onSpin(JSON.parse((e as MessageEvent).data)));return()=>es.close()}
