@@ -38,7 +38,7 @@ async function start(){ await mongo.connect(); db=mongo.db(process.env.MONGODB_D
     if(routePath==="/"||routePath==="/vanilla/"||routePath==="/vanilla/index.html"||routePath.startsWith("/vanilla/dist/")){
       const file=routePath==="/"||routePath==="/vanilla/"||routePath==="/vanilla/index.html"?"vanilla/index.html":routePath.slice(1);
       const full=pathModule.resolve(process.cwd(),file);if(!fs.existsSync(full))return send(res,404,{error:"Static file not found"});
-      const ext=path.extname(full);const types:any={".html":"text/html; charset=utf-8",".js":"text/javascript; charset=utf-8",".css":"text/css; charset=utf-8"};res.writeHead(200,{"content-type":types[ext]||"application/octet-stream","cache-control":"no-cache"});return res.end(fs.readFileSync(full));
+      const ext=pathModule.extname(full);const types:any={".html":"text/html; charset=utf-8",".js":"text/javascript; charset=utf-8",".css":"text/css; charset=utf-8"};res.writeHead(200,{"content-type":types[ext]||"application/octet-stream","cache-control":"no-cache"});return res.end(fs.readFileSync(full));
     }
     const path=u.pathname;const s=await session(req);if(!s)return send(res,401,{error:"Unauthorized"});const ownerId=ObjectId.isValid(String(s.userId))?new ObjectId(String(s.userId)):String(s.userId);
 if(req.method==="GET"&&path==="/slot-api/machines"){const ms=await db.collection("slot_machines").find({userId:ownerId}).sort({updatedAt:-1}).toArray();return send(res,200,{machines:ms.map(x=>({id:String(x._id),name:x.name,active:listeners.has(String(x._id))})),activeId:ms[0]?String(ms[0]._id):"",config:ms[0]?.config})}
