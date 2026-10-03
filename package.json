@@ -9,7 +9,8 @@
     "backend": "tsx --env-file=.env.local backend/server.ts",
     "dev:backend": "tsx watch --env-file=.env.local backend/server.ts",
     "build:vanilla": "esbuild vanilla/src/main.ts --bundle --outfile=vanilla/dist/main.js --format=esm",
-    "dev:vanilla": "esbuild vanilla/src/main.ts --bundle --outfile=vanilla/dist/main.js --format=esm --watch"
+    "dev:vanilla": "esbuild vanilla/src/main.ts --bundle --outfile=vanilla/dist/main.js --format=esm --watch",
+    "build:render": "npm run build:vanilla"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
