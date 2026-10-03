@@ -6,6 +6,8 @@ import { MongoClient, ObjectId } from "mongodb";
 import { defaultSlot } from "../lib/slot/default";
 import type { SlotConfig } from "../lib/slot/types";
 import { calculateMath } from "../lib/slot/math";
+import bcrypt from "bcryptjs";
+import crypto from "node:crypto";
 
 const PORT=Number(process.env.SLOT_SERVER_PORT||4000);
 const uri=process.env.MONGODB_URI;if(!uri)throw new Error("MONGODB_URI is required");
@@ -26,6 +28,21 @@ async function start(){ await mongo.connect(); db=mongo.db(process.env.MONGODB_D
   if(req.method==="OPTIONS"){res.writeHead(204);return res.end();}
   try{
     const u=new URL(req.url||"/","http://localhost");const routePath=u.pathname;
+    if(routePath==="/api/auth/login"&&req.method==="POST"){
+      const body=await json(req);const email=String(body.email||"").toLowerCase().trim();const password=String(body.password||"");
+      if(!email||!password)return send(res,400,{error:"Email and password are required"});
+      const users=db.collection("users");let user=await users.findOne<any>({email});
+      const adminEmail=process.env.ADMIN_EMAIL?.toLowerCase().trim();const adminPassword=process.env.ADMIN_PASSWORD;
+      if(!user&&adminEmail&&adminPassword&&email===adminEmail&&password===adminPassword){const passwordHash=await bcrypt.hash(adminPassword,12);const result=await users.insertOne({email:adminEmail,passwordHash,role:"admin",createdAt:new Date()});user={_id:result.insertedId,email:adminEmail,role:"admin",passwordHash}}
+      if(!user||!(await bcrypt.compare(password,user.passwordHash)))return send(res,401,{error:"Invalid credentials"});
+      const token=crypto.randomBytes(32).toString("hex");await db.collection("sessions").insertOne({token,userId:String(user._id),createdAt:new Date(),expiresAt:new Date(Date.now()+12*60*60*1000)});
+      res.setHeader("Set-Cookie",`slot_session=${token}; HttpOnly; Path=/; Max-Age=43200; SameSite=Lax${process.env.NODE_ENV==="production"?"; Secure":""}`);
+      return send(res,200,{ok:true,email:user.email,role:user.role});
+    }
+    if(routePath==="/login"){
+      const html=`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Slot Simulator Login</title><style>body{margin:0;font-family:system-ui;background:#111;color:#eee;display:grid;place-items:center;min-height:100vh}.card{width:min(360px,calc(100% - 32px));padding:28px;border-radius:14px;background:#1d1d1d;box-sizing:border-box}h1{margin:0 0 8px}label{display:block;margin:16px 0 6px}input{width:100%;box-sizing:border-box;padding:11px;border-radius:8px;border:1px solid #444;background:#111;color:#fff}button{margin-top:18px;width:100%;padding:11px;border:0;border-radius:8px;cursor:pointer}#error{color:#ff6b6b;margin-top:12px}</style></head><body><form class="card" id="f"><h1>🎰 Slot Simulator</h1><p>Sign in to continue</p><label>Email</label><input id="email" type="email" required autocomplete="username"><label>Password</label><input id="password" type="password" required autocomplete="current-password"><button>Sign in</button><div id="error"></div></form><script>f.onsubmit=async e=>{e.preventDefault();error.textContent="";const r=await fetch("/api/auth/login",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({email:email.value,password:password.value})});const d=await r.json();if(!r.ok){error.textContent=d.error||"Login failed";return}location.href="/"};</script></body></html>`;
+      res.writeHead(200,{"content-type":"text/html; charset=utf-8","cache-control":"no-store"});return res.end(html);
+    }
     const publicMachineRoute=routePath.match(/^\/slot-api\/machines\/([^/]+)\/(slot-config|events|spin)$/);
     if(publicMachineRoute){
       const id=decodeURIComponent(publicMachineRoute[1]);const action=publicMachineRoute[2];
