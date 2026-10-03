@@ -24,21 +24,24 @@ async function loadServerConfig(){if(!machineId)return;const el=document.querySe
 function renderLogin(){
 root.innerHTML=`<div class="landing theme-${theme}">
   <div class="landingCenter">
-  <main class="landingCard">
-    <div class="logo">🎰</div>
-    <h1>Slot Simulator</h1>
-    <p class="lead">Build, configure and simulate your own slot machine.</p>
-    <p class="sub">Create reels, tune payouts and test your target RTP before putting your machine into operation.</p>
-    <div class="landingActions">
-      <a class="primaryBtn" href="/login">Sign In</a>
-      <a class="secondaryBtn" href="/login?signup=1">Create Account</a>
-    </div>
-    <div class="landingFeatures">
-      <span>🎰 Dynamic reels</span><span>📊 RTP simulation</span><span>⚙️ Full configuration</span>
-    </div>
-  </main>
+    <main class="landingCard">
+      <div class="logo">🎰</div>
+      <div class="eyebrow">SLOT MACHINE CONFIGURATOR</div>
+      <h1>Slot Simulator</h1>
+      <p class="lead">Build. Simulate. Configure.</p>
+      <p class="sub">Create your own slot machine, tune reels and payouts, and test your target RTP with powerful simulation tools.</p>
+      <div class="landingActions">
+        <button class="fancyBtn primary" id="landingSignIn"><span>🔐</span><b>Sign In</b><small>Continue to your machines</small></button>
+        <button class="fancyBtn secondary" id="landingSignUp"><span>✨</span><b>Create Account</b><small>Start your first slot machine</small></button>
+      </div>
+      <div class="landingFeatures">
+        <span>🎰 Dynamic reels</span><span>📊 RTP simulation</span><span>⚙️ Full configuration</span>
+      </div>
+    </main>
   </div>
-</div>`
+</div>`;
+document.getElementById("landingSignIn")?.addEventListener("click",()=>location.href="/login");
+document.getElementById("landingSignUp")?.addEventListener("click",()=>location.href="/login?signup=1");
 }
 async function init(){
   try{
