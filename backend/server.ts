@@ -38,5 +38,6 @@ if(match){const id=decodeURIComponent(match[1]);const action=match[2];const m=aw
  if(req.method==="POST"&&action==="simulate"){const b=await json(req),c=m.config as SlotConfig,n=Math.min(10000000,Math.max(1000,Number(b.spins)||100000));let total=0,wins=0,max=0,triggers=0;for(let i=0;i<n;i++){const x=spin(c);total+=x.win;if(x.win>0){wins++;max=Math.max(max,x.win)}if(c.freeSpins.enabled&&x.scatter>=c.freeSpins.triggerCount)triggers++}const wager=n*c.betPerSpin;return send(res,200,{spins:n,wager,totalWin:total,rtp:wager?total/wager:0,winSpins:wins,hitFrequency:wins/n,averageWin:wins?total/wins:0,maxWin:max,freeSpinTriggers:triggers})}
 }
 return send(res,404,{error:"Not found"})}catch(e){console.error("slot-server:",e);send(res,500,{error:e instanceof Error?e.message:"Server error"})}});
-server.listen(PORT,()=>console.log(`Slot server listening on http://localhost:${PORT}`)); }
+const port = Number(process.env.PORT) || 4000;
+server.listen(port, "0.0.0.0", () => console.log(`Slot server listening on http://0.0.0.0:${port}`)); }
 start().catch(error=>{console.error("Failed to start slot server:",error);process.exit(1)});
