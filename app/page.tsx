@@ -35,6 +35,18 @@ export default function Home(){
  async function selectMachine(id:string){const r=await fetch("/slot-api/machines/"+encodeURIComponent(id));if(!r.ok)return;const d=await r.json();setMachineId(id);setMachineName(d.config?.name||"");if(d.config)setC(clone(d.config));setServerActive(Boolean(d.active));setM(null);setS(null);setSaveState("saved")}
  async function newMachine(){const name=prompt("New slot machine name","New Slot Machine");if(!name)return;setMachineBusy(true);try{const r=await fetch("/slot-api/machines",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({name})});const d=await r.json();if(!r.ok)throw new Error(d.error||"Create failed");setMachines(x=>[d.machine,...x]);setMachineId(d.machine.id);setMachineName(d.machine.name);setC(clone(d.config));setSaveState("saved")}catch(e){console.error(e);setSaveState("error")}finally{setMachineBusy(false)}}
  async function activateServer(){const r=await fetch("/slot-api/machines/"+encodeURIComponent(machineId)+"/activate",{method:"POST"});if(r.ok)setServerActive(true)}
+ function eventSubscribeCode(){return `const eventSource = new EventSource("/slot-api/machines/${machineId}/events");
+eventSource.addEventListener("spin", (event) => {
+  const result = JSON.parse(event.data);
+  console.log("SPIN RESULT:", result);
+
+  // Example:
+  // document.querySelector("#winLabel").textContent = result.win;
+});
+
+eventSource.onerror = (error) => console.error("Slot events:", error);
+// eventSource.close(); // unsubscribe`}
+ function copyEventCode(){navigator.clipboard?.writeText(eventSubscribeCode())}
  async function deleteMachine(){if(machines.length<=1||!confirm("Delete this slot machine?"))return;setMachineBusy(true);try{const r=await fetch("/slot-api/machines/"+encodeURIComponent(machineId),{method:"DELETE"});if(!r.ok)throw new Error("Delete failed");const remaining=machines.filter(x=>x.id!==machineId);setMachines(remaining);await selectMachine(remaining[0].id)}catch(e){console.error(e);setSaveState("error")}finally{setMachineBusy(false)}}
  async function calc(){setBusy(true);try{const r=await fetch("/slot-api/math",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(c)});if(r.status===401)return router.replace("/login");setM(await r.json())}finally{setBusy(false)}}
  async function sim(){setBusy(true);try{const r=await fetch("/slot-api/machines/"+encodeURIComponent(machineId)+"/simulate",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({config:c,spins})});if(r.status===401)return router.replace("/login");setS(await r.json())}finally{setBusy(false)}}
